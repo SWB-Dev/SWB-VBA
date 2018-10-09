@@ -1,0 +1,176 @@
+Option Explicit
+'Commonly used functions
+
+
+Public Function LastRow(wsWorksheet As Worksheet) As Double
+  'Find the last row of the specified excel sheet
+    LastRow = wsWorksheet.Cells(Rows.count, 1).End(xlUp).Row
+End Function
+
+Public Function LastColumnLetter(wsWorksheet As Worksheet) As String
+  'find the letter of the last column of the specified excel sheet
+    LastColumnLetter = Split(wsWorksheet.Cells(1, Columns.count).End(xlToLeft).Address, "$")(1)
+End Function
+
+Public Function LastColumnNumber(wsWorksheet As Worksheet) As String
+  'Find the number of the last column of the specifid excel sheet
+    LastColumnNumber = wsWorksheet.Cells(1, Columns.count).End(xlToLeft).Column
+End Function
+
+Public Function ColumnLetter(wsWorksheet As Worksheet, sValue As Variant) As String
+  'Find the column letter on the specified worksheet for a specific string value.  Good for finding header columns.
+    ColumnLetter = Split(wsWorksheet.Cells.Find(What:=sValue, After:=Range("A1"), LookAt:=xlWhole, SearchDirection:=xlNext).Address, "$")(1)
+End Function
+
+Public Function ColumnNumber(wsWorksheet As Worksheet, sValue As Variant) As Integer
+  'Find the column number on the specified worksheet for a specific string.
+     ColumnNumber = wsWorksheet.Cells.Find(What:=sValue, After:=Range("A1"), LookAt:=xlWhole, SearchDirection:=xlNext).Column
+End Function
+
+Public Sub TextToColumns()
+'Iterate through all columns that have values and convert text values to general
+Dim i As Variant
+Dim c As Variant
+
+    For i = 1 To LastColumnNumber(ActiveSheet)
+        
+        c = ColumnLetter(ActiveSheet, Cells(1, i))
+        Columns(c & ":" & c).Select
+        Selection.TextToColumns Destination:=Range(c & "1"), DataType:=xlDelimited, _
+            TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+            Semicolon:=False, Comma:=False, Space:=False, Other:=False, FieldInfo _
+            :=Array(1, 1), TrailingMinusNumbers:=True
+    
+    Next
+    
+    If boxComplete Then MsgBox "Complete"
+
+End Sub
+
+Public Sub ClickAButton()
+'I did not write this function.  I found this on StackOverflow but havcing been using it in various modifications.
+'This creates and runs a VB script with a 2 second delay.  It is used to interact with pop-up boxes that VBA can't touch.
+Dim strScript As String, sScriptFile As String, wsh As Object
+    Set wsh = VBA.CreateObject("WScript.Shell")
+    '---Create VBscript String---
+    strScript = "WScript.Sleep 2000" & vbNewLine & _
+                "Dim wsh" & vbNewLine & _
+                "Set wsh = CreateObject(""WScript.Shell"")" & vbNewLine & _
+                "wsh.SendKeys ""%a""" & vbNewLine & _
+                "Set wsh = Nothing"
+    '---Save the VBscript String to file---
+    sScriptFile = wsh.ExpandEnvironmentStrings("%Temp%") & "\zz_automation.vbs"
+    Open sScriptFile For Output As #1
+    Print #1, strScript
+    Close #1
+    '---Execute the VBscript file asynchronously---
+    wsh.Run """" & sScriptFile & """"
+    Set wsh = Nothing
+
+End Sub
+
+Public Sub AddFilePathFooter()
+'Adds the filepath to all worksheet footers in the workbook
+  Dim ws As Worksheet
+  Dim footer As String
+
+      For Each ws In Worksheets
+
+          footer = ActiveWorkbook.FullName
+          ws.PageSetup.CenterFooter = footer
+
+      Next
+
+End Sub
+
+Function FirstVisibleCell(wsWorksheet As Worksheet) As Double
+'returns the first visible row for filtered data (after the header row)
+  Dim rng As Range, rFilteredRange As Range
+
+  Set rFilteredRange = wsWorksheet.Range("A1").SpecialCells(xlCellTypeVisible)
+
+  For Each rng In rFilteredRange
+
+      If rng.Row <> 1 Then
+          FirstVisibleCell = rng.Row
+          Exit For
+      End If
+
+  Next
+
+
+End Function
+
+Function findWindow(sWindowType As String, sWindowName As String) As Object
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Steven Barnes created function to work around ThinApp openeing new IE windows'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+    Dim iE As Object
+
+    For Each iE In CreateObject("Shell.Application").Windows
+    
+        If InStr(iE, sWindowType) Then
+        'If iE = "Internet Explorer" Then
+            
+            If iE.locationname = sWindowName Then
+                
+                Set findWindow = iE
+                
+                Exit For
+            
+            End If
+        
+        End If
+    
+    Next iE
+    
+
+
+End Function
+
+Sub ConvertFormulasToValues()
+'Convert a selected range containing formulas into values
+    Selection.Copy
+    Selection.PasteSpecial Paste:=xlPasteValues
+    Application.CutCopyMode = False
+End Sub
+
+Function StrInArray(aArray As Variant, sString As String) As Boolean
+'Check in a string is in a given array
+Dim i As Long
+    
+    StrInArray = False
+       
+    For i = 0 To UBound(aArray)
+        
+        If (aArray(i) = sString) Then
+            
+            StrInArray = True
+            Exit For
+            
+        End If
+    
+    Next
+
+End Function
+
+Function GetIEatURL(sMatch As String) As Object
+'Function found on StackOverflow an Internet Explorer popup window from a webpage
+  Dim iE As Object, oShApp As Object, oWin As Object
+  Set oShApp = CreateObject("Shell.Application")
+  For Each oWin In oShApp.Windows
+      If TypeName(oWin.document) = "HTMLDocument" Then
+          Set iE = oWin
+          If LCase(iE.locationurl) Like LCase(sMatch) Then
+              Set GetIEatURL = iE
+              Exit For
+          End If
+      End If
+  Next
+  Set oShApp = Nothing
+  Set oWin = Nothing
+
+End Function
