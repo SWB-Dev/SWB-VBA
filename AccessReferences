@@ -51,3 +51,19 @@ Private Sub VerifyReference(sRefName As String, sRefPath As String)
     End If
     
 End Sub
+
+Private Sub RunQuery(sQueryName As String, Optional sTableToClear As String)
+'Custom function to run queries.
+
+    Dim sSQLCommand As String
+    
+    If Not sTableToClear = "" Then
+        sSQLCommand = "DELETE * FROM " & sTableToClear
+        DoCmd.RunSQL sSQLCommand
+    End If
+    
+    DoCmd.OpenQuery sQueryName
+    DoCmd.Close acQuery, sQueryName, acSaveYes
+
+
+End Sub
