@@ -1,0 +1,53 @@
+Public Function CheckReferences()
+'DO NOT REMOVE
+'Function runs on database startup to check if the user has the needed references enabled for the VBA macros
+
+    Dim sReferences() As String
+    Dim sRefPaths() As String
+    Dim i As Integer
+    
+    sReferences = Split("MSHTML,SHDocVw,UIAutomationClient", ",")
+    sRefPaths = Split("C:\windows\SysWOW64\mshtml.tlb,C:\Windows\SysWOW64\ieframe.dll,C:\Windows\System32\UIAutomationCore.dll", ",")
+
+    For i = 0 To UBound(sReferences)
+    
+        VerifyReference sReferences(i), sRefPaths(i)
+    
+    Next
+    
+    DoCmd.OpenForm "Form1"
+
+End Function
+
+Private Sub VerifyReference(sRefName As String, sRefPath As String)
+'DO NOT REMOVE
+'Will add the reference if it's missing
+
+    Dim ref As Reference
+    
+    For Each ref In References
+    
+        If ref.Name = sRefName Then Exit Sub
+    
+    Next
+    
+    If sRefName = "UIAutomationClient" Then
+        
+        Dim backupPath As String
+        Dim fSO As Object
+        Dim sUserID As String
+        
+        sUserID = Environ("username")
+        backupPath = "C:\Users\" & sUserID & "\Documents\UIAutomationCore.dll"
+        
+        If Not Dir$(backupPath) = "UIAutomationCore.dll" Then
+            Set fSO = CreateObject("Scripting.FileSystemObject")
+            fSO.CopyFile sRefPath, backupPath, True
+        End If
+        
+        Access.References.AddFromFile (backupPath)
+    Else
+        Access.References.AddFromFile (sRefPath)
+    End If
+    
+End Sub
