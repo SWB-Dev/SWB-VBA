@@ -1,0 +1,26 @@
+Private Sub ClickFrameBar(sSaveType As String, oIE As InternetExplorer)
+'Finds the download bar in IE window and clicks the specified button.
+
+    Dim h As LongPtr
+    Dim oUIA As New UIAutomationClient.CUIAutomation
+    Dim uiaElem As IUIAutomationElement
+    Dim uiaBtn As UIAutomationClient.IUIAutomationElement
+    Dim uiaIP As IUIAutomationInvokePattern
+    Dim uiaCnd As IUIAutomationCondition
+    
+    'Find the hwnd of the frame notification bar
+    Do Until h <> 0
+        h = oIE.Hwnd
+        h = findWindowEx(h, 0, "Frame Notification Bar", vbNullString)
+    Loop
+    
+    'Point to the specified button to click
+    Set uiaElem = oUIA.ElementFromHandle(ByVal h)
+    Set uiaCnd = oUIA.CreatePropertyCondition(UIA_NamePropertyId, sSaveType)
+    Set uiaBtn = uiaElem.FindFirst(TreeScope_Subtree, uiaCnd)
+    Set uiaIP = uiaBtn.GetCurrentPattern(UIA_InvokePatternId)
+    
+    uiaIP.Invoke 'Click the button
+
+
+End Sub
