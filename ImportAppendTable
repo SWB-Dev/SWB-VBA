@@ -1,0 +1,24 @@
+Sub ImportAppendTable(ByVal sTableToClear As String, ByVal sFilePath As String, Optional sQueriesToRun As String)
+
+    Dim sSQLCommand As String
+    
+    DoCmd.SetWarnings False
+    
+    'Clear the temporary table where import data gets housed
+    sSQLCommand = "DELETE * FROM " & sTableToClear
+    DoCmd.RunSQL sSQLCommand
+    
+    'Validate the file exists
+    If Len(Dir$(sFilePath)) > 0 Then
+        'Import data to temp table
+        DoCmd.TransferSpreadsheet acImport, acSpreadsheetTypeExcel12, sTableToClear, sFilePath, True
+        'Run any queries if specified.
+        If sQueriesToRun <> "" Then
+            DoCmd.OpenQuery sQueriesToRun
+            DoCmd.Close acQuery, sQueriesToRun, acSaveYes
+        End If
+    End If
+    
+    DoCmd.SetWarnings True
+    
+End Sub
