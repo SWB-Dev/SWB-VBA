@@ -48,6 +48,7 @@ Dim c As Variant
 End Sub
 
 Public Sub ClickAButton()
+' I am sorry I wrote this is 2018 and didn't think to save the link to the SO thread back then.
 'I did not write this function.  I found this on StackOverflow but havcing been using it in various modifications.
 'This creates and runs a VB script with a 2 second delay.  It is used to interact with pop-up boxes that VBA can't touch.
 Dim strScript As String, sScriptFile As String, wsh As Object
@@ -158,6 +159,7 @@ Dim i As Long
 End Function
 
 Function GetIEatURL(sMatch As String) As Object
+' I am sorry I wrote this is 2018 and didn't think to save the link to the SO thread back then.
 'Function found on StackOverflow an Internet Explorer popup window from a webpage
   Dim iE As Object, oShApp As Object, oWin As Object
   Set oShApp = CreateObject("Shell.Application")
